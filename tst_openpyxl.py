@@ -47,6 +47,8 @@ orecv_dict = {
 	'06-20/ОП': "Сантел сервис", '07-20/ОП':"Навигационные технологии",
 	'08-20/ОП': "Технотрейд НН", '09-20/ОП': "Вектор", '11-20/ОП': "Навигационные решения",
 }
+idorg_dict = {	'02-20/ОП': 513, '03-20/ОП': 687, '04-20/ОП': 682, '05-20/ОП': 589, '06-20/ОП': 686, '07-20/ОП': 851, '08-20/ОП': 913, }
+
 ssys_dict = {
 	1: 'Тест БО', 2: 'СМУ ПП', 4: 'СМУ ША', 8: 'СМ ЖКХ', 16: 'СМ СОГ', 32: 'СМУ ОВ', 64: 'ЖКХ-М', 128: 'СМП', 256: 'ЧТС',
 	2048: 'ПП ЦДС', 4096: 'ПП НПАП', 8192: 'ВТ', 16384: 'СХ', 32768: 'ЛХ', 65536: 'МСПОРТ', 131072: 'ДТ-НН', 262144: 'ДТ-НО', 524288: 'КТ',
@@ -217,7 +219,13 @@ def	vms_find_orgs (qand=None):
 	for r in rows:
 		if r[d.index('contractnumber')] != cnumber:
 			if devids:
-				print(cnumber, orecv_dict.get(cnumber))	#, devids)
+				""" Установать связь ТС с организацией ретранслируещей данные id_opr  ""
+				qup_id_opr = "UPDATE transports SET id_opr = %s WHERE device_id IN (%s)" % (
+					idorg_dict[cnumber] if idorg_dict.get(cnumber) else -1,
+					str(devids)[1:-1])
+				print(cnumber, orecv_dict.get(cnumber), IDB_CNTR.execute(qup_id_opr))    #, devids)
+				"""
+				print(cnumber, orecv_dict.get(cnumber))    #, devids)
 				q = """SELECT id_org, bname, inn, bm_ssys FROM organizations WHERE id_org IN (
 				SELECT id_org FROM transports WHERE device_id IN (%s) GROUP BY id_org) ORDER BY bm_ssys""" % str(devids)[1:-1]
 				rrs = IDB_CNTR.get_rows(q)
@@ -227,6 +235,20 @@ def	vms_find_orgs (qand=None):
 			cnumber = r[d.index('contractnumber')]
 		else:
 			devids.append(r[d.index('id')])
+	if devids:
+			""" Установать связь ТС с организацией ретранслируещей данные id_opr  ""
+			qup_id_opr = "UPDATE transports SET id_opr = %s WHERE device_id IN (%s)" % (
+				idorg_dict[cnumber] if idorg_dict.get(cnumber) else -1,
+				str(devids)[1:-1])
+			print(cnumber, orecv_dict.get(cnumber), IDB_CNTR.execute(qup_id_opr))    #, devids)
+			"""
+			print(cnumber, orecv_dict.get(cnumber), idorg_dict.get(cnumber))  #, devids)
+			q = """SELECT id_org, bname, inn, bm_ssys FROM organizations WHERE id_org IN (
+			SELECT id_org FROM transports WHERE device_id IN (%s) GROUP BY id_org) ORDER BY bm_ssys""" % str(devids)[1:-1]
+			rrs = IDB_CNTR.get_rows(q)
+			for idorg, onmae, inn, ssys in rrs:
+				print('\t', inn, "\t%8s\t%s" % (ssys_dict.get(ssys), onmae))
+	# print(len(rows), qand)
 
 
 def	vms_get_ts (inn=None, qand=None):
@@ -317,7 +339,7 @@ if __name__ == '__main__':
 	# 2020.05.17
 	# swhere = "inn IN %s ORDER BY bm_ssys" % str(inns)
 	# orgs2xlsx(swhere=swhere)	#"bm_ssys>2 ORDER BY region")
-	# vms_find_orgs(qand="AND contractnumber LIKE '%0/ОП'")	# Договор ретрансляции
+	vms_find_orgs(qand="AND contractnumber LIKE '%0/ОП'")	# Договор ретрансляции
 	# inns = (5249076222, 5249084953, 5249066619, 5249066601, 521500776400, 522401215726, 5260357227, 5260410382, 5263004131, 5258121094, 5259120142, 5263133747, 5250039673, 5215000426, 5246035429)
 	inns = [5259120142, 5249084953]
 	# INN Santel
@@ -328,7 +350,7 @@ if __name__ == '__main__':
 			5262311940, 526301541890, 5249050619, 5225004758, 5226000410, 5226014364,
 			522100130194, 5262288057, 5246046766, 5221006585]
 	'''
-	for inn in inns:		vms_get_ts(inn=inn)
+	# for inn in inns:		vms_get_ts(inn=inn)
 	# vms_get_ts(inn=5243019838)	# АПАТ
 	# vms_get_ts(qand="AND contractnumber LIKE '%0/ОП'")	# Договор ретрансляции
 	# vms_get_ts(5247048220)		# 5247048220	МУП "Выксунское ПАП",
