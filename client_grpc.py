@@ -1,6 +1,6 @@
 #!/usr/bin/python -u
 # -*- coding: utf-8 -*-
-""" 	"""
+""" gRPC прием данных от Т1 (TEST)	"""
 
 import  time
 import	grpc
@@ -23,10 +23,11 @@ def getState(stub):
 	result = stub.GetObjectsState(request)
 	print ('RRR', type(result))   # result.Objects содержит в себе результаты запроса по кажому из устройств
 	for o in result.Objects:
-		print (o.StateNumber, o.Data[0].DeviceTime, time.strftime("\t%d-%m-%Y %T", time.localtime(o.Data[0].DeviceTime)))
+		print (o.StateNumber, o.Data[0].DeviceTime, time.strftime("\t%d-%m-%Y %T", time.localtime(o.Data[0].DeviceTime)), end = '->')
 		print ("\tLon: %s\tLat: %s\tCourse: %s" % (o.Data[0].Position.Longitude, o.Data[0].Position.Latitude, o.Data[0].Position.Course))
 		# print (o.Data[0].Position)
 		# print (o.Data)
+
 
 def getDataRange (stub):
 	""" получение телематических данных за период   """
@@ -57,14 +58,23 @@ def getDataStream (stub):
 	#   ObjectsDataStreamRequest
 	# rrr = stub.GetObjectsEventsStream(request)    # подписка на поток событий по устройствам
 	rrr = stub.GetObjectsDataStream(request)
-	print ("SSS", rrr)    # help(rrr))
-	# rrr.details()       # Висим тихо
+	print ("\nSSS", rrr)    # help(rrr))
+	tt = time.time()
 	print ('running', rrr.running())     # finished with exit code 0
-	print ('add_done_callback\t', rrr.add_done_callback(callback))       # Висим тихо
+	for j in range(55):
+		res = rrr.done()
+		if res:
+			print("\tresult", j, res, rrr.details())
+			break
+		# else:			time.sleep(3)
+	print("#"*11, int(time.time() - tt))
+	print ("details\t", rrr.details())       # Висим тихо
+	# print ('add_done_callback\t', rrr.add_done_callback(callback))       # Висим тихо
 	# print ('initial_metadata\t', rrr.initial_metadata())       # Висим тихо
 	print ('debug_error_string\t', rrr.debug_error_string())       # Висим тихо
 	# print (rrr.result(timeout=1000))    # Висим тихо
 	# print (rrr.traceback(timeout=1000))    # Висим тихо
+
 
 def callback(arg):
 	print ("\ncallback:".upper(), type(arg))
@@ -72,6 +82,7 @@ def callback(arg):
 		print (j, arg)
 		print ("result", arg.result(timeout=1000))
 		if arg.debug_error_string:  break
+
 
 def getInfo (stub):
 	""" получение метаданных устройства """
@@ -90,13 +101,13 @@ channel = grpc.insecure_channel('rnis-api.rnc52.ru:6161')
 stub =	Api_pb2_grpc.APIStub(channel)
 
 # help (stub.GetObjectsEventsStream)    # MultiThreadedRendezvous)
-# print (help(stub.GetObjectsState)
-for j in range(5):
+# help(stub.GetObjectsState)
+for j in range(2):
 	print (j, "#"*22)
 	getState(stub)      # Текущее состояние
 	time.sleep(11)
 # getDataRange(stub)  # получение телематических данных за период
-# getDataStream(stub)
+getDataStream(stub)
 # getInfo(stub)
 
 ''' gRPC	'р984кх152', 'р999кх152', 'ар31752'
