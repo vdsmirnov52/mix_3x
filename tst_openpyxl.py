@@ -251,6 +251,64 @@ def	vms_find_orgs (qand=None):
 	# print(len(rows), qand)
 
 
+def	contracts_get_ts (inn=None, qand=None):
+	""" Поиск ТС в БД contracts по ИНН организации или условию "AND contractnumber LIKE '%0/ОП'"	"""
+	global IDB_CNTR
+
+	query = "SELECT id_ts, garnum, gosnum, marka, t.modele, yearofcar, ptsnumber, ptsdate, registrationnumber, registrationdate, vinnumber, uin, sim_1, sim_2, last_date " \
+			"FROM transports t JOIN atts a ON t.id_ts = a.autos " \
+			"WHERE id_org IN (SELECT id_org FROM organizations WHERE inn = %s) LIMIT 5" % inn
+	print(query)
+	if not IDB_CNTR:	IDB_CNTR = dbt.dbtools(ids_db['cntr'])
+	rows = IDB_CNTR.get_rows(query)
+	d = IDB_CNTR.desc
+	print(d)
+	heads = []
+	lines = []
+	cwidth = {}
+	for j in range(len(ttsc_order)):
+		# print(ttsc_order[j])	#, type(rows[0][d.index(ttsc_order[j])]), rows[0][d.index(ttsc_order[j])])
+		cname = ttsc_desc.get(ttsc_order[j])
+		# if not cname:    cname = d[j].upper()
+		if colab(j) in 'CDEGHX':
+			cwidth[colab(j)] = 24
+		elif colab(j) in 'UVY':
+			cwidth[colab(j)] = 16
+		else:
+			cwidth[colab(j)] = 12
+		heads.append([colab(j) + '1', cname])
+		# print(cname)
+		'''
+		# print(ttsc_order[j], cname)
+		v = rows[0][d.index(j)]
+		if type(v) == str:
+			cwidth[colab(j)] = 12 if len(v) < 12 else 24
+		elif type(v) == int:
+			cwidth[colab(j)] = 8
+		else:
+			cwidth[colab(j)] = 16
+		'''
+	print(heads)
+	print(cwidth)
+	for r in rows:
+		print(r)
+		l = []
+		l.append(r[d.index('garnum')])
+		l.append(r[d.index('gosnum')])
+		l.append(r[d.index('marka')])
+		l.append(r[d.index('modele')])
+		l.append('Navtelecom Signal S-2551')
+		l.append(r[d.index('uin')])
+		l.append(r[d.index('uin')])
+		l.append(None)
+		# l.append(r[d.index('')])
+		print(l)
+
+		lines.append(l)
+	# fname = "ts_list_%s" % inn
+	# data2xlsx('Транпорт', heads, lines, fname, cwidth=cwidth)
+
+
 def	vms_get_ts (inn=None, qand=None):
 	""" Поиск ТС в БД vms_ws по ИНН организации или условию "AND contractnumber LIKE '%0/ОП'"	"""
 	global	IDB_VMS
@@ -405,7 +463,6 @@ if __name__ == '__main__':
 	5211760056,	# ООО Радор – E
 	5257009364,	# ООО фирма "Магистраль" -E
 	]
- 	'''
 	inns = [	# 2020.07.09
 	5259137080,	#ООО СМК
 	5256068455,	#ООО ОРБ Нижний
@@ -419,6 +476,8 @@ if __name__ == '__main__':
 	7734699480,	#ООО "МСК-НТ
 	]
 	for inn in inns:		vms_get_ts(inn=inn)
+ 	'''
+	contracts_get_ts(inn=5249006828)	# МУП "Экспресс" г.Дзержинск
 	# vms_get_ts(inn=5243019838)	# АПАТ
 	# vms_get_ts(qand="AND contractnumber LIKE '%0/ОП'")	# Договор ретрансляции
 	# vms_get_ts(5247048220)	# 5247048220	МУП "Выксунское ПАП",
