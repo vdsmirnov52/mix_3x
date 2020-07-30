@@ -58,7 +58,7 @@ def getDataStream (stub):
 	#   ObjectsDataStreamRequest
 	# rrr = stub.GetObjectsEventsStream(request)    # подписка на поток событий по устройствам
 	rrr = stub.GetObjectsDataStream(request)
-	print ("\nSSS", rrr)    # help(rrr))
+	print ("\nSSS", type(request), rrr)    # help(rrr))
 	tt = time.time()
 	print ('running', rrr.running())     # finished with exit code 0
 	for j in range(55):
