@@ -22,11 +22,11 @@ qegts_orgs = """SELECT id_org, s.label, inn, kpp, ogrn, bank, bname, rname FROM 
 	SELECT autos FROM atts WHERE mark LIKE '%EGTS%прибор%' AND autos IN (
 	SELECT id_ts FROM wtransports)) GROUP BY id_org);
 	"""
-qvms_ts = 	"""SELECT nd.id, imei, nd.code, nd.name, nd.phone, nd.phone2, 
+qvms_ts = 	"""SELECT nd.id, imei, nd.code, nd.name, nd.phone, nd.phone2,
 	nd.operator1_id, nd.operator2_id, nd.icc_id1, nd.icc_id2, nd.devicetype_id,	--yu
 	nt.description as marka, t2d.id as t2d_id, atl.transport_id, atl.begindate, t.regnum, t.garagenum, t.contractnumber,
 	t.transporttype_id, t.yearofcar, t.category_id, t.vinnumber, t.ptsnumber, t.ptsdate, t.registrationdate, t.registrationnumber, --yu
-	tt.code AS tmarka, tt.description AS tmodele, co.inn, ss.code AS sscode, tg.code AS tgroup
+	tt.code AS tmarka, tt.description AS tmodele, co.inn, ss.code AS sscode, tg.code AS tgroup, tk.description AS tkdescription
 	FROM navigationdevice nd
 	INNER JOIN transport2devicelink t2d on t2d.device_id=nd.id
 	INNER JOIN abstracttransportlink atl on atl.id=t2d.id AND atl.isdeleted = 0 AND atl.enddate IS NULL
@@ -36,6 +36,7 @@ qvms_ts = 	"""SELECT nd.id, imei, nd.code, nd.name, nd.phone, nd.phone2,
 	INNER JOIN navigationdevicetype nt ON nt.id = nd.devicetype_id
 	LEFT JOIN transportgroup tg ON tg.id = t.group_id
 	LEFT JOIN contractor co ON co.id = t.owner_id
+	JOIN transportkind tk ON transportkind_id = tk.id
 	WHERE nd.isdeleted=0 %s
 	ORDER BY contractnumber	-- nd.id
 	"""
@@ -152,7 +153,7 @@ def	orgs2xlsx (**kwargs):
 				for r in rows:	inn_list.append(r[0])
 
 		if inn_list:
-			# fname = kwargs.get('fout') if 'fout' in kwargs.keys() else 'organizations'
+			fname = kwargs.get('fout') if 'fout' in kwargs.keys() else 'organizations'
 			colms = []
 			heads = []
 			cwidth = {}
@@ -381,7 +382,12 @@ def	vms_get_ts (inn=None, qand=None):
 			# elif 'vinnumber' == k and r[d.index(k)] and len(r[d.index(k)]) != 17:		l.append(None)
 			else:
 				l.append(r[d.index(k)])
+		jh = len(ttsc_order)
+		heads.append([colab(jh) + '1', 'Last DATE'])
+		heads.append([colab(jh+1) + '1', 'TS Type'])
 		l.append(get_last_date(r[d.index('id')], r[d.index('regnum')]))
+		l.append(r[d.index('tkdescription')])
+		# l.append(get_ts_type(r[d.index('regnum')]))
 		lines.append(l)
 	fname = "ts_list_%s" % inn
 	data2xlsx('Транпорт', heads, lines, fname, cwidth=cwidth)
@@ -389,6 +395,11 @@ def	vms_get_ts (inn=None, qand=None):
 	# print(l)
 #	table_to_xlsx('vms', str(inn), query, str(inn))
 
+def	get_ts_type (gosnun):
+	global IDB_CNTR
+	r = IDB_CNTR.get_row("SELECT ttname FROM ts_types WHERE id_tts = (SELECT ts_type FROM transports WHERE gosnum = '%s')" % gosnun)
+	print(r, gosnun)
+	return	r[0] if r else None
 
 def	get_last_date(devid, gosnum):
 	""" Читать дате последней работы ТС  """
@@ -417,6 +428,7 @@ ttsc_desc = {
 	'operator2_id': "Оператор 2", 'phone2': "Телефон 2", 'icc_id2': "№ SIM карты 2",
 	}
 
+
 if __name__ == '__main__':
 	#[5262311940, 5250068811, 5246045628пщ 	# for j in range(55):		print(colab(j))
 	# table_to_xlsx('b03', 'Список пользователей', "SELECT * FROM vperson_sp ORDER BY name LIMIT 16", 'vperson_sp')
@@ -424,7 +436,8 @@ if __name__ == '__main__':
 	# vms_handbks()
 	# for inn in [5249057251, 5247048220, 5254000797, 524500120268, 524504481339, 524900992249, 524908186307]:
 	# 	get_org_descript(inn)
-	# orgs2xlsx(inns=[5249057251, 5247048220, 5254000797, 524500120268, 524504481339, 524900992249, 524908186307])
+	# orgs2xlsx(fout = 'ЖКХ-М', swhere = 'bm_ssys = 64')	# inns=[5249057251, 5247048220, 5254000797, 524500120268, 524504481339, 524900992249, 524908186307])
+	# sys.exit()
 	# 2020.05.17
 	# swhere = "inn IN %s ORDER BY bm_ssys" % str(inns)
 	# orgs2xlsx(swhere=swhere)	#"bm_ssys>2 ORDER BY region")
@@ -559,7 +572,7 @@ if __name__ == '__main__':
 	5243025662,	# ООО ДЭП
 	5222059847,	# ООО Лысковская ДСК
 	5212511278,	# ООО ПМК Воскресенская
-	5263002261,	# ООО Предприятие Озеленитель          
+	5263002261,	# ООО Предприятие Озеленитель
 	5261103151,	# ООО СТК "Стимул"
 	]
 	inns = [		# TS_Lists_20200723_schools.zip
@@ -671,7 +684,6 @@ if __name__ == '__main__':
 	5219003690,	# Краснобаковский детский дом
 	5221002750,	# Лукояновский Губернский колледж("ГБПОУ ЛГК")
 	]
-	'''
 	inns = [		# tmp/TS_Lists_20200727.zip
 	5227004168,	# МБОУ ДО "Починковский Центр дополнительного образования"
 	5243010916,	# МБОУ ДО ДООЦ "Водопрь"
@@ -868,7 +880,79 @@ if __name__ == '__main__':
 	#,	# МКОУ Специальная (коррекционная) общеобразовательная школа
 	5212003570,	# МКОУ Староустинская СОШ
 	#,	# МКОУ Уренская специальная (коррекционная) общеобразовательная школа-интернат VIII вида
-	] 
+	]
+	inns = [		### data/TSType_List_2020805.zip	tmp/TS_Lists_20200803.zip
+	5263133747,	#( ООО "ЭксАвтоДор"
+	5260381460,	# ООО «Альянс»
+	5204012814,	# ООО «Профессионал-СтройРесурс»)
+	###	По району Н.Новгород 10 компаний, из них активные 3 (
+	526301541890,	# ИП Постникова Ольга Ивановна
+	5261113216,	# Общество с ограниченной ответственностью "Авто футболистов"
+	5262288057,	# ООО «АвтоСпутник»)
+	###	По району Дзержинск 11 компаний, из них активные 5
+	5249050619,	# ООО "Континент"
+	5249076222,	# ООО "Орбита"
+	5249066601,	# ООО "Транслайн плюс"
+	5249057251,	# ООО «Транслайн»
+	5249066619,	# ООО "ДПП плюс"
+	###	По району Бор 2 компании, из них активные 1
+	5246045628,	# ООО "СтройТаун"
+	]
+	inns = [		### tmp/TS_Lists_20200804.zip
+	5236000508,	# 	МКУ "УпОДМОУ"
+	5245018847,	# МКУ "ЦОМОУ" 5245018847
+	5239011709,	# МКУ «МСЦСО»
+	5237003621,	# МКУ «Сервис плюс»
+	5217004017,	# МКУ «ХЭГ» г.Княгинино
+	5204012772,	# МКУ Информационно-методический центр
+	5247015055,	# Мотмосская СШ МБОУ
+	5226012423,	# МОУ "Озёрская ОШ"
+	5238003078,	# МОУ «Лесогорская СШ»
+	5238006537,	# МОУ «Силинская ОШ»
+	5238003046,	# МОУ «Смирновская средняя школа»
+	5234000580,	# МОУ «Тоншаевская средняя школа»
+	5238003134,	# МОУ «Шараповская средняя школа»
+	# ???,	# МОУ Архангельская ООШ
+		5209004101,	# МОУ Архангельская школа
+		5238003021,	# МОУ "Архангельская СШ"
+	5209004278,	# МОУ Белышевская СОШ
+	5226012529,	# МОУ Бортсурманская СШ
+	5226012536,	# МОУ Буреполомская СОШ        5226012536
+	# ???,	# МОУ Ветлужская СОШ
+	# ???,	# МОУ Ветлужская СОШ № 2
+	5234003119,	# МОУ Гагаринская ООШ              5234003119
+	5209004415,	# МОУ Детско-юношеская спортивная школа Чайка
+	5226012536,	# МОУ Деяновская ОШ
+	5209003080,	# МОУ Калининская СОШ
+	5218002943,	# МОУ Ковернинская СОШ № 1
+	5234003334,	# МОУ Лесозаводская ООШ
+	5209004246,	# МОУ Макарьевская СОШ-Ветлужский
+	5226012462,	# МОУ Мало-Андосовская ОШ   5226012462
+	5226012430,	# МОУ Можаров-Майданская средняя школа
+	5209004140,	# МОУ Мошкинская СОШ
+	5209004119,	# МОУ Новоуспенская ООШ
+	5226012455,	# МОУ Петряксинский СОШ
+	5234003165,	# МОУ Пижемская СОШ 5234003165
+	5218002781,	# МОУ Понуровская ОШ
+	5209004172,	# МОУ Туранская ООШ
+	5234001915,	# МОУ Шайгинская ООШ               5234001915
+	5231003449,	# МОУ Яковская СОШ
+	5214005037,	# Муниципальное автономное общеобразовательное учреждение «Гимназия № 1»
+	#,	# Муниципальное бюджетное образовательное учреждение дополнительного образования  детско-юношеская спортивная школа - Сосновский р-н
+	]
+	'''
+	inns = [		### data/TS_Lists_20200805.zip
+	5244009913, 5246019875, 5246019868, 5254024808, 5245018847, 5238003021, 5238003127, 5238003102,
+	5238003039, 5223034370, 5201002230, 5244012200, 5257052271, 5247014534, 5218001403, 5233001133,
+	5233001158, 5224000278, 5253000280, 5230001086, 5247014710, 5247015111, 5246002078, 5247014510,
+	5247014936, 5259028281,
+	5240002071,	# Муниципальное общеобразовательное учреждение «Светлогорская средняя школа»  "Светлогорская основная школа"
+	#,	# Отдел образования администрации Сокольского муниципального района
+	5240002071,	# Отдел образования администрации городского округа Сокольский
+	#,	# Отдел образования администрации Тоншаевского района
+	5234001873,	# Управление образования, спорта и молодежной политики администрации Тоншаевского района
+	5233001172,	# Тонкинская СШ МБОУ
+	]
 	for inn in inns:		vms_get_ts(inn=inn)
 	# receiver_get_ts()
 	# contracts_get_ts(inn=5249006828)	# МУП "Экспресс" г.Дзержинск
