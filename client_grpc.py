@@ -69,8 +69,8 @@ def getDataStream (stub):
 		# else:			time.sleep(3)
 	print("#"*11, int(time.time() - tt))
 	print ("details\t", rrr.details())       # Висим тихо
-	# print ('add_done_callback\t', rrr.add_done_callback(callback))       # Висим тихо
-	# print ('initial_metadata\t', rrr.initial_metadata())       # Висим тихо
+	print ('add_done_callback\t', rrr.add_done_callback(callback))       # Висим тихо
+	print ('initial_metadata\t', rrr.initial_metadata())       # Висим тихо
 	print ('debug_error_string\t', rrr.debug_error_string())       # Висим тихо
 	# print (rrr.result(timeout=1000))    # Висим тихо
 	# print (rrr.traceback(timeout=1000))    # Висим тихо
