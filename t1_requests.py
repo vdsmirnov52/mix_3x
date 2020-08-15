@@ -139,21 +139,36 @@ def comp_vms2t1 ():
 	print('Rows:', j, 'K:', k)
 	# print(dorg2inn)
 	
-	
+	'''
 	for inn in dinn2orgs.keys():
 		print(inn, dinn2orgs[inn]['name'])
 		for ts in dinn2orgs[inn]['ts']:
-			ts.append(check_gnum(ts[0]))
+			ts.extend(check_gnum(ts[0]))
 			print("\t", ts)
-			
-	print("#"*22)
+		xl.data2xlsx(dinn2orgs[inn]['name'],
+		             [['A1', 'Гос №'], ['B1', 'Дата в Т1'], ['C1', 'секунд'], ['D1', 'Дата в РНИС'], ['E1', 'ИНН РНИС'], ['F1', 'Организация в РНИС']],
+		             dinn2orgs[inn]['ts'],
+		             cwidth = {'A': 22, 'B': 22, 'C': 16, 'D': 22, 'E': 22, 'F': 22, 'G':22},
+		             fname = str(inn))
+	'''
+	'''
 	for oname in name_orgs.keys():
 		print(oname)
 		for ts in name_orgs[oname]:
-			ts.append(check_gnum(ts[0]))
+			ts.extend(check_gnum(ts[0]))
 			print('\t', ts)
+		try:
+			fname = oname
+			xl.data2xlsx(oname,
+			             [['A1', 'Гос №'], ['B1', 'Дата в Т1'], ['C1', 'секунд'], ['D1', 'Дата в РНИС'], ['E1', 'ИНН РНИС'], ['F1', 'Организация в РНИС']],
+			             name_orgs[oname],
+			             cwidth = {'A': 22, 'B': 22, 'C': 16, 'D': 22, 'E': 22, 'F': 22, 'G':22},
+			             fname = fname)
+		except: print("EXCEPT", fname)
+	'''
 
 
+import tst_openpyxl as xl
 import dbtools3
 DBID = None
 
@@ -167,8 +182,9 @@ def check_gnum(gnum):
 	if not DBID:    DBID = dbtools3.dbtools('host=10.10.2.241 dbname=contracts port=5432 user=smirnov')
 	dr = DBID.get_dict(query)
 	if dr and dr.get('last_date'):
-		return [str(dr.get('last_date')), dr.get('inn'), dr.get('bname')]
+		return [str(dr.get('last_date'))[:10], dr.get('inn'), dr.get('bname')]
 	# return [str(dr['last_date']), dr['inn']]
+	return []
 
 if __name__ == "__main__":
 	is_update_dics()
