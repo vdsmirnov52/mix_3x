@@ -60,6 +60,7 @@ def getDataStream (stub):
 	# rrr = stub.GetObjectsEventsStream(request)    # подписка на поток событий по устройствам
 	rrr = stub.GetObjectsDataStream(request)
 	print("\nSSS", type(request), type(rrr))    # help(rrr))
+	print('NUMBERS', NUMBERS)
 	tt = time.time()
 	# '''
 	for j in range(11):
@@ -137,7 +138,7 @@ import t1_requests as t1
 list_canals = [
 	'rnis-api.rnc52.ru:6161',	# Наша система
 	'rnis-tm.t1-group.ru:18082',	# Разработчик Т1
-	'10.10.21.20:6161',
+	'10.10.21.22:6161',
 ]
 
 
@@ -147,11 +148,11 @@ if __name__ == '__main__':
 	NUMBERS = t1.get_ts_list(cols = 'gosnumber')
 	print('Len NUMBERS:', len(NUMBERS))
 	# '''
-	cname = list_canals[0]
+	cname = list_canals[2]
 	print('\n\tОткрываем канал и создаем клиент:\t', cname)
 	channel = grpc.insecure_channel(cname)  # 'rnis-api.rnc52.ru:6161')
 	stub = Api_pb2_grpc.APIStub(channel)
 	# getInfo(stub)
 	test(stub)
-	# getDataStream(stub)
+	getDataStream(stub)
 	# '''

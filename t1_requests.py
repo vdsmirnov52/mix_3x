@@ -114,9 +114,14 @@ def comp_vms2t1 ():
 	dinn2orgs = {}
 	name_orgs = {}
 	dorg2inn = {}
+	org_id2name = {}
 	for r in response_json: #response.json():
 		# print (r.get('idDev'), r.get('gosnumber').upper(), type(r.get('org_inn')), r.get('org_name'), sep = '\t')
 		
+		org_id = r.get('org_id')
+		if not org_id in org_id2name:
+			org_id2name[org_id] = {'inn': r.get('org_inn'), 'name': r.get('org_name')}
+			
 		if r.get('org_inn') and r.get('org_inn').isdigit():
 			iinn = int(r.get('org_inn'))
 			if not iinn in dinn2orgs.keys():
@@ -137,9 +142,18 @@ def comp_vms2t1 ():
 		# if j > 9:  break
 	print(r.keys())
 	print('Rows:', j, 'K:', k)
-	# print(dorg2inn)
-	
+	# print(dinn2orgs)
+	for oid in org_id2name.keys():
+		print(oid, "%s\t%s" % (org_id2name[oid].get('inn') if org_id2name[oid].get('inn') else '\t\t', org_id2name[oid].get('name')))
 	'''
+	# print(name_orgs)
+	for od in name_orgs.keys():
+		print(od, end = '\n')
+		# for gn in name_orgs.get(od):
+		# 	print(gn[0], end = '\t')
+		# print()
+	# print(dorg2inn)
+	''
 	for inn in dinn2orgs.keys():
 		print(inn, dinn2orgs[inn]['name'])
 		for ts in dinn2orgs[inn]['ts']:
@@ -186,13 +200,54 @@ def check_gnum(gnum):
 	# return [str(dr['last_date']), dr['inn']]
 	return []
 
+
+def test_api():
+	# help(requests.post)
+	url = "https://rnis-api.rnc52.ru/ajax/request?com.rnis.vehicles.action.bnso.create"
+	data = {
+		"headers": {"ip": "192.168.20.132", "requester": "rnis_nn", "timestamp": 1597656673, "version": "1.0"},
+		"payload": {"bnso_code": "111", "bnso_number": "123", "phone_number": "+79030530573", "uuid": "111"}
+	}
+	data = {
+		"headers": {"meta": {}, "token": TOKEN},
+		"payload": {"ports": [], "bnso_code": "123123123123", "unit_uuid": "4f1e755a-62b0-11ea-8c7c-021ac3a7b695", "component": "kiutr"}
+	}
+	url = 'https://rnis-api.rnc52.ru/ajax/request?com.rnis.auth.action.login'
+	data = {"headers":{"meta":{}},"payload":{"login":"apirnis","password":"apirnis20"}}
+	json = None
+	headers = {
+		'authority': 'rnis-api.rnc52.ru',
+		'accept': 'application/json, text/javascript, */*; q=0.01',
+		# 'subject': 'com.rnis.auth.action.login',
+		# 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36',
+		# 'content-type': 'application/json;charset=UTF-8',
+		# 'origin': 'https://rnis.rnc52.ru',
+		# 'sec-fetch-site': 'same-site',
+		# 'sec-fetch-mode': 'cors',
+		# 'sec-fetch-dest': 'empty:',
+		# 'referer': 'https://rnis.rnc52.ru/auth',
+		'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7,fr;q=0.6,nl;q=0.5',
+	}
+	try:
+		# response = requests.post(url, data = data, json = json, headers = headers)  #, kwargs)
+		response = requests.post(url, headers = headers, data = data, verify = False)
+		# response = requests.post(url, data = data, verify = False)
+		print('response', response.status_code)
+		print(response.text)
+	except:
+		exc_type, exc_value = sys.exc_info()[:2]
+		print(exc_type, exc_value)
+
+
 if __name__ == "__main__":
-	is_update_dics()
+	# test_api()
+	# is_update_dics()
 	comp_vms2t1()
 	# actual_tss()
 
 	url = 'http://10.10.21.20:8000/v.1/messages/all/8d6fbe03e99f4b13966e622981c9a11f'
 	# url = 'http://10.10.21.20:8000/v.1/vehicles_dic/8d6fbe03e99f4b13966e622981c9a11f'
+	# url = 'http://10.10.21.20:8000/v.1/messages/idOrg:4f1e755a-62b0-11ea-8c7c-021ac3a7b695/8d6fbe03e99f4b13966e622981c9a11f'
 	# url = 'http://10.10.21.20:8000/v.1/messages/idOrg:6a94317c-c2b8-11ea-ac79-021ac3ba17f9/8d6fbe03e99f4b13966e622981c9a11f'
 	# url = 'http://10.10.21.20:8000/v.1/messages/idOrg:1d35c7d8-684a-11ea-bcc8-021ac3a7b695/8d6fbe03e99f4b13966e622981c9a11f'
 	# url = 'http://10.10.21.20:8000/v.1/messages/idOrg:1d35c7d8-684a-11ea-bcc8-021ac3a7b695/8d6fbe03e99f4b13966e622981c9a111'    # ERROR
