@@ -152,7 +152,7 @@ if __name__ == '__main__':
 	print('\n\tОткрываем канал и создаем клиент:\t', cname)
 	channel = grpc.insecure_channel(cname)  # 'rnis-api.rnc52.ru:6161')
 	stub = Api_pb2_grpc.APIStub(channel)
-	# getInfo(stub)
-	test(stub)
-	getDataStream(stub)
+	getInfo(stub)
+	# test(stub)
+	# getDataStream(stub)
 	# '''

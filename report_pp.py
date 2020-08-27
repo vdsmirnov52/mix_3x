@@ -283,6 +283,7 @@ def	test_vms_get_ts ():
 		res = vms_get_ts(where="inn = '%s'" % inn, order="regnum", nddata="nddata_202004", fname='dd202004_%d' % inn)
 		print(res, res[0]//3600, res[2]/31)
 
+
 def	repport_out(year, month):
 	""" Выгрузить сводный рапорт и report_subs	"""
 	global IDBLite
@@ -321,16 +322,59 @@ def	repport_out(year, month):
 	wb.save(fout)
 	print("Create", fout)
 
+
 def	isconnect():
 	print("Connect to DataBase:")
 	for ddb in ids_db:
 		dbi = dbt.dbtools(ids_db[ddb])
 		print("\t%s:\t" % ddb, ids_db[ddb], 'Ok' if dbi and not dbi.last_error  else 'Error')
 
+
+list_gnum_ts = [
+	'к834ра152', 'Р774УЕ152', 'P485BK152', 'Т266КЕ71', 'А314РТ152', 'В314КО152', 'В112КМ152', 'О607СН152', 'К108КТ152', 'О791ЕТ', 'С640ЕК',
+	'Р429СА152', 'С931ЕН152', 'М537АХ152', 'К738ЕР152', 'К016УЕ152', 'М069ХМ152', 'Р828УА152', 'С182АС152', 'К029КО152', 'О909УР152', 'О597СН152',
+	'М669НЕ152', 'О004УХ152', 'Р223ТК152', 'Р402ТК152', 'К433ЕО152', 'К556КТ152', 'М173РЕ152', 'К024ЕК152', 'Р668УН152', 'Р423ТС152', 'Р468ТС152',
+	'О438ХС152', 'К841ХА152', 'а794рк763', 'О277ХХ152', 'н243тс152', 'м048рн37', 'к875тв152', '52НР6684', '77НХ9127', '52АА7587', '52АА7588',
+	'Н291СХ152', 'Р588УХ152', 'Р569ОН152', 'Р693ОН152', 'С393ТК52', 'Х769ТК52', 'A993XH152', 'Р836ТН', 'K249EP', 'М019ХТ', 'С980ВВ', 'О488ТВ',
+	'H955CC152', 'С980АМ152', 'Н931ОН152', 'Н099СА152', 'н804ок152', 'н111хк46', 'P630KE152', 'О751ЕУ152', 'P460PK152', 'Р860КА152', 'К224СУ152',
+	'Р441НВ152', 'Р706ТК152', 'Р421ТК152', 'н291сх152', 'в524рх152', 'Р445ТК152', 'Р422ТК152', 'Р435ТК152', 'Н679РХ152', 'К198ОТ152', 'М282ТВ152',
+	'о534ео152',
+	]
+
+
+def find_actual_ts(gntss):
+	dbi = dbt.dbtools(ids_db['cntr'])
+	dict_orgs = {}
+	for gn in gntss:
+		# print(gn.upper(), end = '\t')
+		drts = dbi.get_dict("SELECT * FROM vtransports WHERE gosnum LIKE '%s" % gn.upper() +"%'")
+		id_ts = drts.get('id_ts') if drts else None
+		if id_ts:
+			id_org = drts.get('id_org')
+			if id_org not in dict_orgs.keys():
+				dict_orgs[id_org] = []
+			dd = dbi.get_dict("SELECT * FROM atts WHERE autos = %s" % id_ts)
+			if dd:
+				# print("%s\tlast_date: %s\tdevice_id: %s\tuin: %s\tcode: %s" % (
+				# 	gn.upper(), dd.get('last_date') if dd.get('last_date') else "\t\t", dd.get('device_id'), dd.get('uin'), dd.get('code')))
+				dict_orgs[id_org].append("%s\tlast_date: %s\tdevice_id: %s\tuin: %s\tcode: %s" % (
+					gn.upper(), dd.get('last_date') if dd.get('last_date') else "\t\t", dd.get('device_id'), dd.get('uin'), dd.get('code')))
+			else:
+				# print(gn.upper(), "\tНет прибора.")
+				dict_orgs[id_org].append("%s \t%s" % (gn.upper(), "\tНет прибора."))
+		else:
+			print(gn.upper(), "\tНет ТС")
+	for id_org in dict_orgs.keys():
+		dorg = dbi.get_dict("SELECT * FROM organizations WHERE id_org = %s" % id_org)
+		print(id_org, dorg.get('inn'), dorg.get('bname'))
+		for s in dict_orgs[id_org]:
+			print(s)
+
 if __name__ == '__main__':
 	# init_dbreport()
 	# test_vms_get_ts()
-	org_list(2)
-	repport_out(2020, 5)
+	# org_list(2)
+	# repport_out(2020, 5)
 	# isconnect()
+	find_actual_ts(list_gnum_ts)
 	# vms_get_ts(where="regnum LIKE 'А%' AND ss.code = 'ПП' ", order="inn, regnum LIMIT 11")
