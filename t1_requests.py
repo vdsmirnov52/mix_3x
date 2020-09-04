@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys,time
 import requests
 '''	Методы доступа к Т1 через http запросы
