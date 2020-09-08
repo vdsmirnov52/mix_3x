@@ -147,15 +147,17 @@ def comp_vms2t1 ():
 	# print(dinn2orgs)
 	for oid in org_id2name.keys():
 		print(oid, "%s\t%s" % (org_id2name[oid].get('inn') if org_id2name[oid].get('inn') else '\t\t', org_id2name[oid].get('name')))
-	'''
+	# '''
 	# print(name_orgs)
 	for od in name_orgs.keys():
 		print(od, end = '\n')
-		# for gn in name_orgs.get(od):
-		# 	print(gn[0], end = '\t')
-		# print()
+		for gn in name_orgs.get(od):
+			stm = time.strftime("%d-%m-%Y %T", time.localtime(gn[2])) if gn[2] else '--'
+			#
+			print(gn[0], gn[1:], stm)    #, end = '\t')
+		print()
 	# print(dorg2inn)
-	''
+	'''
 	for inn in dinn2orgs.keys():
 		print(inn, dinn2orgs[inn]['name'])
 		for ts in dinn2orgs[inn]['ts']:
