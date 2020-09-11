@@ -78,7 +78,8 @@ def get_ts_list (**kwargs):
 	''' Читать список ТС    '''
 	url = 'http://10.10.21.20:8000/v.1/messages/all/8d6fbe03e99f4b13966e622981c9a11f'
 	cols = kwargs.get('cols')
-	if not cols:      return
+	if not cols:      return []
+
 	dtm = kwargs.get('dtime') if kwargs.get('dtime') else 60
 	currtm = int(time.time())
 	response = requests.get(url)

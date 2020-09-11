@@ -11,9 +11,10 @@ DEVICES = ["157231", "1284891", "1284890", "1323475", "24964441", "3534510480477
 #NUMBERS = ["н756се750", "н851се750", "ат59652"]
 # Active T1
 # NUMBERS = ['р984кх152', 'р999кх152', 'ар31752', 'ау20652', 'м063ов152']
-NUMBERS = ['a422aa152', 'a523aa152', 'a592aa152', 'а421аа52', 'а423аа152', 'а639кр152', 'а642кр152', 'в296на152', 'е013тк152', 'е588ху152',
+'''NUMBERS = ['a422aa152', 'a523aa152', 'a592aa152', 'а421аа52', 'а423аа152', 'а639кр152', 'а642кр152', 'в296на152', 'е013тк152', 'е588ху152',
             'е995та152', 'к623хо152', 'м385тн152', 'н044нн52', 'н046нн52', 'н154нн52', 'н204ао152', 'о197ур152', 'р202еу152', 'х555рс52']
-''' NUMBERS = ['а908ко152', 'о014рр52', 'о146аа52', 'о632ма52', 'т415хк52', 't006', 't009', 't017', 't019', 't035', 't051', 't054', 't055', 't056',
+ # '''
+NUMBERS = ['а908ко152', 'о014рр52', 'о146аа52', 'о632ма52', 'т415хк52', 't006', 't009', 't017', 't019', 't035', 't051', 't054', 't055', 't056',
 		't057', 't059', 't060', 't061', 't062', 't063', 't064', 't065', 't066', 't067', 't068', 't069', 't070', 't072', 't075', 't077', 't078',
 		't079', 't080', 't081', 't082', 'а003ех152', 'а012ет152', 'а858ет152', 'ао92052', 'ао92152', 'ао92352', 'ао92452', 'ар91852', 'ар92252',
 		'ар99752', 'ат47652', 'ау48652', 'ау75952', 'ау76052', 'ау76152', 'ау76252', 'ау76352', 'ау76452', 'ау76552', 'ау76652', 'ау76752',
@@ -23,7 +24,7 @@ NUMBERS = ['a422aa152', 'a523aa152', 'a592aa152', 'а421аа52', 'а423аа152',
 		'с638еа152', 'с642еа152', 'с644еа152', 'с649еа152', 'с650еа152', 'с655ве152', 'с659ва152', 'с677еа152', 'с684еа152', 'с702ве152', 'с703ве152',
 		'с705ве152', 'с708ве152', 'с711ве152', 'с719ве152', 'с723ве152', 'с724ве152', 'с725ве152', 'с751ве152', 'с753ве152', 'с755ве152', 'с756ве152',
 		'с758ве152', 'с760ве152', 'с763ве152', 'с765ве152', 'с769ве152', 'т403хк52', 'т734от52', 'т741от52']
-# '''
+
 
 def getState(stub):
 	""" Текущее состояние   """
@@ -50,8 +51,8 @@ def getDataRange (stub, dtime = None):
 	Filter = Api_pb2.DataFilter(DeviceCode = DEVICES, StateNumber = NUMBERS, DateFrom = itmf, DateTo = itm)
 	Fields = Api_pb2.FieldsToggle(Position=True)
 	request = Api_pb2.ObjectsStateRequest(Filter = Filter, Fields = Fields)
-	rrr = stub.GetObjectsDataRange (request)
-	print ("RRR", type(rrr))
+	rrr = stub.GetObjectsDataRange(request)
+	print("RRR", type(rrr))
 	"""
 	DeviceTime  - врема передачи прибором
 	ReceivedTime - время приема данных сервером
@@ -180,19 +181,23 @@ list_canals = [
 
 
 if __name__ == '__main__':
+	for j in range(len(NUMBERS)):   NUMBERS[j] = NUMBERS[j].upper()
+	
 	# test()
 	# t1.actual_tss()
 	# print(t1.get_ts_list(cols = ['date', 'gosnumber', 'time']))
 	activ_nums = NUMBERS
-	NUMBERS = t1.get_ts_list(cols = 'gosnumber')
+	# NUMBERS = t1.get_ts_list(cols = 'gosnumber')
 	# '''
 	cname = list_canals[2]
 	print('\n\tОткрываем канал и создаем клиент:\t', cname)
 	channel = grpc.insecure_channel(cname)  # 'rnis-api.rnc52.ru:6161')
 	stub = Api_pb2_grpc.APIStub(channel)
 	# getInfo(stub)
-	activ_nums = getDataRange(stub, dtime = 22)  # получение телематических данных за период
+	print(NUMBERS)
+	# activ_nums = getDataRange(stub, dtime = 22)  # получение телематических данных за период
 	print('Len NUMBERS:\t', len(NUMBERS))
 	print('Len activ_nums:\t', len(activ_nums))
 	getDataStream(stub, activ_nums)
 	# '''
+	
