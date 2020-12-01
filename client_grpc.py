@@ -6,7 +6,12 @@ import  time, sys
 import	grpc
 import	Api_pb2
 import	Api_pb2_grpc
-
+from queue import Queue
+# from multiprocessing import Queue
+q = Queue()
+q.put('eat')
+print(q.get())
+print('#'*22)
 DEVICES = ["157231", "1284891", "1284890", "1323475", "24964441", "353451048047755"]
 #NUMBERS = ["н756се750", "н851се750", "ат59652"]
 # Active T1

@@ -252,7 +252,7 @@ def	org_list(ssys):
 		car = IDB_CNTR.get_row("SELECT count(*)  FROM wtransports WHERE id_org = %d" % id_org)
 		print(id_org, inn, bname, car[0], time.strftime("%D %T", time.localtime(time.time())), sep='\t')
 		if car and car[0] > 0:
-			res = vms_get_ts(where="inn = '%s'" % inn, nddata="nddata_202005", fname='dd202005_%d' % inn)
+			res = vms_get_ts(where="inn = '%s'" % inn, nddata="nddata_202006", fname='dd202006_%d' % inn)
 			if res:
 				H, S, A = res
 				print(inn, bname, car[0], H/1000, S, A, sep='\t')
@@ -275,12 +275,13 @@ def	test_vms_get_ts ():
 	inns = [#5213005154, # МП "Гагинское ПАП"
 			# 5223034394, # МП "Автостанция" г.Навашино
 			# 5243019838,	# МУП "АПАТ"
-			5206024886,	# МП "Вадское ПАП"
+			# 5206024886,	# МП "Вадское ПАП"
 			# 524701328820,	# ИП Копейкин ЕВ
-			]
+		5251113834, 5201000761, 520100620580, 5231005894,
+	]
 	for inn in inns:
 		print(inn, sep='\t', end='\t')
-		res = vms_get_ts(where="inn = '%s'" % inn, order="regnum", nddata="nddata_202004", fname='dd202004_%d' % inn)
+		res = vms_get_ts(where="inn = '%s'" % inn, order="regnum", nddata="nddata_202006", fname='dd202006_%d' % inn)
 		print(res, res[0]//3600, res[2]/31)
 
 
@@ -372,9 +373,9 @@ def find_actual_ts(gntss):
 
 if __name__ == '__main__':
 	# init_dbreport()
-	# test_vms_get_ts()
+	test_vms_get_ts()
 	# org_list(2)
 	# repport_out(2020, 5)
 	# isconnect()
-	find_actual_ts(list_gnum_ts)
+	# find_actual_ts(list_gnum_ts)
 	# vms_get_ts(where="regnum LIKE 'А%' AND ss.code = 'ПП' ", order="inn, regnum LIMIT 11")
