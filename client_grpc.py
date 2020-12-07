@@ -1,4 +1,4 @@
-#!/usr/bin/env python -u
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """ gRPC прием данных от Т1 (TEST)	"""
 
@@ -77,7 +77,7 @@ def getDataStream (stub, numbers = None):
 	""" подписка на поток телематических данных устройства  """
 	global dcode_ok
 	StateNumber = numbers if numbers else NUMBERS
-#	print('StateNumber:\t', len(StateNumber))
+	print('getDataStream\n\tStateNumber:\t', len(StateNumber))
 	Filter = Api_pb2.DataFilter(DeviceCode = None, StateNumber = StateNumber)   #numbers if numbers else NUMBERS)
 	# Filter = Api_pb2.DataFilter(DeviceCode = DEVICES, StateNumber = None)   #numbers if numbers else NUMBERS)
 	Fields = Api_pb2.FieldsToggle(Position = True)
@@ -97,9 +97,9 @@ def getDataStream (stub, numbers = None):
 				dcode_ok[point.DeviceCode] = (4 * dcode_ok[point.DeviceCode] + dTime)/5
 			else:
 				dcode_ok[point.DeviceCode] = dTime
-			print("%16s  DeviceTime: %s  dT:%7d \t" % (point.DeviceCode, time.strftime('%d.%m.%Y %T', time.localtime(point.DeviceTime)), dTime),
-			      point.Position.Longitude, point.Position.Latitude, point.Position.Course, point.Position.Speed)
-			#, point.Position, point.State)
+			print("%16s  DeviceTime: %s  dT:%7d \t%10.6f %10.6f" % (
+				point.DeviceCode, time.strftime('%d.%m.%Y %T', time.localtime(point.DeviceTime)), dTime,
+				point.Position.Longitude, point.Position.Latitude), point.Position.Course, point.Position.Speed, point.Position.State)
 			j += 1
 			# if j > 3:				break
 		print('Finish', datas)
@@ -144,15 +144,19 @@ list_canals = [
 	'rnis-api.rnc52.ru:6161',	# Наша система
 	'rnis-tm.t1-group.ru:18082',	# Разработчик Т1
 	'10.10.21.22:6161',
+	'10.10.21.21:6161',	### 
 ]
 
 
-def get_range (ts_numbers: list, dt=60):
+def	get_range (ts_numbers: list, dt=60):
 	""" Запрос данных состояния ТС за последние dt секунд
 	Возвращает activ_data - справочник активных ТС.
+	DeviceTime  - врема передачи прибором
+	ReceivedTime - время приема данных сервером
 	"""
 
 	channel = grpc.insecure_channel('10.10.21.22:6161')
+#	channel = grpc.insecure_channel('10.10.21.21:6161')
 	stub = Api_pb2_grpc.APIStub(channel)
 	if not ts_numbers:
 		print("Нет списка ТС")
@@ -165,10 +169,7 @@ def get_range (ts_numbers: list, dt=60):
 	request = Api_pb2.ObjectsStateRequest(Filter = Filter, Fields = Fields)
 	rrr = stub.GetObjectsDataRange(request)
 	# print("RRR", type(rrr))
-	"""
-	DeviceTime  - врема передачи прибором
-	ReceivedTime - время приема данных сервером
-	"""
+
 	activ_num = []
 	activ_data = {}
 	for o in rrr.Objects:
@@ -184,9 +185,12 @@ def get_range (ts_numbers: list, dt=60):
 	return activ_data
 
 
-if __name__ == '__main__':
+def	get_actual_ts():
+	""" Читать актуальные данные от ТС	"""
+	global	NUMBERS
+
 	# for j in range(len(NUMBERS)):   NUMBERS[j] = NUMBERS[j].upper()
-	NUMBERS = []    # Весь транспорт
+#	NUMBERS = []    # Весь транспорт
 	# get_range(['К795СА152', '0551АА52', 'К796СА152'])
 
 	# test()
@@ -208,3 +212,16 @@ if __name__ == '__main__':
 	getDataStream(stub, activ_nums)
 	# '''
 
+
+import threading
+if __name__ == '__main__':
+	get_actual_ts()
+	'''
+	worker = threading.Thread(target = get_actual_ts)
+	worker.start()
+	print("#" * 33)
+	for j in range(111):
+		time.sleep(1)
+		print('sleep:', j, end = '\r')
+	threading._shutdown()
+	'''
