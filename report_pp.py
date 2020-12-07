@@ -281,20 +281,12 @@ def	test_vms_get_ts ():
 			# 5243019838,	# МУП "АПАТ"
 			# 5206024886,	# МП "Вадское ПАП"
 			# 524701328820,	# ИП Копейкин ЕВ
-<<<<<<< HEAD
-		5251113834, 5201000761, 520100620580, 5231005894,
-	]
-	for inn in inns:
-		print(inn, sep='\t', end='\t')
-		res = vms_get_ts(where="inn = '%s'" % inn, order="regnum", nddata="nddata_202006", fname='dd202006_%d' % inn)
-=======
 			5251113834, 5201000761,
 			520100620580, 5231005894,
 			]
 	for inn in inns:
 		print(inn, sep='\t', end='\t')
 		res = vms_get_ts(where="inn = '%s'" % inn, order="regnum", nddata="nddata_202010", fname='dd202010_%d' % inn)
->>>>>>> 45465fbc636aa7d390e4902e3a8f69f2b8890c70
 		print(res, res[0]//3600, res[2]/31)
 
 
