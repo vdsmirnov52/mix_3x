@@ -20,26 +20,28 @@ def	get_allts (turl = None):
 	except:
 		print(response)
 		return
-	if not response_json:	return
+	if not response_json:
+		return
 	if response_json and response_json[0].get('error'):
 		print("ERROR: %s %s" % (response_json[0].get('error'), response_json[1].get('info')))
 		return
-	j = k = 0
+
 	org_id2name = {}
 	j = 0
-	for r in response_json: #response.json():
-	#	print (r.keys())	#;	break
+	for r in response_json:
+		# print (r.keys());	break
 		org_id = r.get('org_id')
-		print (r)
+		# print (r)
 		j += 1
-	#	if j > 15:	break
+		# if j > 15:	break
 		if org_id not in org_id2name.keys():
 			org_id2name[org_id] = {'tname': r.get('org_name'), 'inn': r.get('org_inn'), 'ts': []}
-		org_id2name[org_id]['ts'].append({'id_t1': r.get('id'), 'gosnum': r.get('gosnumber').upper(), 'id_dev': r.get('idDev'), 'last_date': r.get('date'), 'last_tm': r.get('time')})
-	
+		try:
+			org_id2name[org_id]['ts'].append({'id_t1': r.get('id'), 'gosnum': r.get('gosnumber').upper(), 'id_dev': r.get('idDev'), 'last_date': r.get('date'), 'last_tm': r.get('time')})
+		except:
+			print(r)
 	print (turl, '\tLen response_json:', len(response_json), '\n')
-	# ddb = dbtools3.dbtools('host=212.193.103.20 dbname=test port=5432 user=smirnov')
-	ddb = dbtools3.dbtools('host=10.10.2.241 dbname=test port=5432 user=smirnov')
+	ddb = dbtools3.dbtools(DBout)
 	print('#'*33)
 	if turl == 'creat':   create_000(ddb, org_id2name)
 	if turl == 'actv':    create_all(ddb, org_id2name)
@@ -48,13 +50,17 @@ def	get_allts (turl = None):
 
 def create_000(ddb, org_id2name):
 	""" Поиск и формирование первоначального набора данных  """
-	for k in org_id2name:
+	for k in org_id2/name:
+		print(k)
+		return
 		tss = org_id2name[k].get('ts')
 		if not tss:     continue
 		for t in tss:
 			print(t)
 
+
 def update_avtv(ddb, org_id2name):
+	count = 0
 	for k in org_id2name:
 		tss = org_id2name[k].get('ts')
 		if not tss:     continue
@@ -68,18 +74,22 @@ def update_avtv(ddb, org_id2name):
 			query = "SELECT id, id_t1, id_dev, inn, gosnum, last_date, last_tm FROM t1_atts WHERE gosnum = '%s'" % t.get('gosnum')
 			dctt = ddb.get_dict(query)
 			if dctt:
-				if dctt['last_tm'] < last_tm:
+				if dctt['last_tm'] and dctt['last_tm'] < last_tm:
 					sets = ["last_date = '%s'" % t['last_date'], "last_tm = %s" % last_tm]
 					if inn and inn != dctt['inn']:
 						sets.append("inn = %s" % inn)
 					query = "UPDATE t1_atts SET %s  WHERE id = %d" % (', '.join(sets), dctt['id'])
 					print(query, ddb.execute(query))
+					count += 1
 			else:
-				query = "INSERT INTO t1_orgs (id_t1, inn, t1name) VALUES ('%s', %s, '%s')" % (k, inn if inn else 'NULL', org_id2name[k]['tname'])
+				# query = "INSERT INTO t1_orgs (id_t1, inn, t1name) VALUES ('%s', %s, '%s')" % (k, inn if inn else 'NULL', org_id2name[k]['tname'])
 				# print(query, ddb.execute(query))
-				print(query)
+				# print(query)
 				add_atts(ddb, t, inn)
-
+				count += 1
+				
+	print('update_avtv count:', count)
+	
 	
 def create_all(ddb, org_id2name):
 	for k in org_id2name:
@@ -128,6 +138,7 @@ def check_org ():
 	)) GROUP BY id_org ORDER BY id_org;"""
 	ddb = dbtools3.dbtools('host=10.10.2.241 dbname=contracts port=5432 user=smirnov')
 	print(query)
+	ddb.desc
 	rows = ddb.get_rows(query)
 	for c, id_org in rows:
 		dorg = ddb.get_dict("SELECT * FROM organizations WHERE id_org = %s" % id_org)
@@ -138,14 +149,21 @@ def check_org ():
 				print("\t%s\t%s" % (gosnum, last_date))
 	sys.exit()
 
-def	test():
-	print ('Test connections:')
+
+import subprocess
+local_host = subprocess.check_output("cat /proc/sys/kernel/hostname", shell = True) == b'vadim\n'
+# DBout =	'host=10.10.2.241 dbname=test port=5432 user=smirnov' if local_host else 'host=212.193.103.20 dbname=test port=5432 user=smirnov'
+DBout =	'host=10.10.2.241 dbname=contracts port=5432 user=smirnov' if local_host else 'host=212.193.103.20 dbname=contracts port=5432 user=smirnov'
+
+def test():
+	# print ('Test connections:', subprocess.check_output("cat /proc/sys/kernel/hostname", shell = True) == b'vadim\n')
+	# DBout = subprocess.run("cat", "/proc/sys/kernel/hostname", shell = True, stdout = subprocess.PIPE)
+	print(local_host, DBout, type(DBout))
 	dblist = [
-	'host=127.0.0.1 dbname=b03 port=5432 user=smirnov',
-	'host=10.40.25.176 dbname=vms_ws port=5432 user=vms',
-	# 'host=212.193.103.20 dbname=worktime port=5432 user=smirnov',
-	'host=10.10.2.241 dbname=test port=5432 user=smirnov',
-	'host=10.10.2.40 dbname=test port=5432 user=smirnov',
+		'host=127.0.0.1 dbname=b03 port=5432 user=smirnov',
+		'host=10.40.25.176 dbname=vms_ws port=5432 user=vms',
+		DBout,
+		# 'host=212.193.103.20 dbname=worktime port=5432 user=smirnov',
 	]
 	for sdb in dblist:
 		print ('\tConnect to', sdb, end='\t')
@@ -153,21 +171,80 @@ def	test():
 		print ('Ok' if ddb and not ddb.last_error else ddb.last_error)
 	sys.exit()
 
+
+def myhelp():
+	shelp = """
+	-t  Тест соединения с Базами данных
+	MMM
+	"""
+	print(shelp)
+
+
+def get_grpc_state (inn = None):
+	import client_grpc as grpc
+	dbt1 = dbtools3.dbtools(DBout)
+	
+	# ttt = ['А908КО152', 'О014РР52', 'О146АА52', 'О632МА52', 'Т415ХК52', 'T006', 'T009', 'T017', 'T019', 'T035', 'T051', 'T054', 'T055', 'T056', 'T057', 'T059', 'T060']
+	# query = "SELECT inn, t1name FROM t1_orgs"
+	print("Считаем ТС", dbt1.execute("UPDATE t1_orgs SET countts = (SELECT count(inn) FROM t1_atts WHERE t1_atts.inn = t1_orgs.inn) WHERE t1_orgs.inn > 0"))
+	query = "SELECT inn, t1name FROM t1_orgs WHERE countts > 0"
+	rows = dbt1.get_rows(query)
+	for inn, t1name in rows:
+		# print(t1name)
+		# continue
+		first_data = True
+		if inn:
+			query = "SELECT gosnum FROM t1_atts WHERE inn = %s" % inn
+			ttt = []
+			ars = dbt1.get_rows(query)
+			for r in ars:
+				ttt.append(r[0].lower())
+			activ_data = grpc.get_range(ttt, dt = 300)  # получение телематических данных за период
+			if activ_data:
+				if first_data:
+					print('\n' + t1name)
+					first_data = False
+				for k in activ_data.keys():
+					d = activ_data[k]
+					print("\t%10s %s" % (k, time.strftime("%d-%m-%Y %T", time.localtime(d.DeviceTime))), d.DeviceTime, end = '\t')
+					print("%10.6f %10.6f" % (d.Position.Longitude, d.Position.Latitude), end = '\t')  # Course, Satellites, Speed
+					autod = dbt1.get_dict("SELECT * FROM t1_atts WHERE gosnum = '%s'" % k)
+					if autod:
+						if autod['last_tm'] and autod['last_tm'] < d.DeviceTime:
+							if d.Position.Longitude:
+								ss = ",x = %10.6f, y = %10.6f" % (d.Position.Longitude, d.Position.Latitude)
+							else:
+								ss = ''
+							query = "UPDATE t1_atts SET last_date = '%s', last_tm = %s %s WHERE gosnum = '%s'" % (
+								time.strftime("%Y-%m-%d %T", time.localtime(d.DeviceTime)), d.DeviceTime, ss, k)
+							print(query, dbt1.execute(query))
+						else:
+							print('Old')
+					else:
+						print("Z"*11)
+	sys.exit()
+
+
 if __name__ == '__main__':
 	sttmr = time.time()
 	print("Start %i" % os.getpid(), sys.argv, time.strftime("%Y-%m-%d %T", time.localtime(sttmr)))
-	# check_org()   # Контроль наличия организаций и наличия у них ТС
+	# get_grpc_state()
+	# check_org()   # Контроль наличия организаций и наличия у них ТС (dbname=contracts)
 	
 	try:
-		optlist, args = getopt.getopt(sys.argv[1:], 'tuacc')
+		optlist, args = getopt.getopt(sys.argv[1:], 'tguac')
 		for o in optlist:
-			if o[0] == '-t':    test()
-			if o[0] == '-c':    get_allts ('creat')     # Поиск и формирование первоначального набора данных
-			if o[0] == '-u':    get_allts ('updt')
-			if o[0] == '-a':    get_allts ('actv')
+			if o[0] == '-t':	test()
+			elif o[0] == '-c':	get_allts ('creat')     # Поиск и формирование первоначального набора данных
+			elif o[0] == '-u':	get_allts ('updt')
+			elif o[0] == '-a':	get_allts ('actv')
+			elif o[0] == '-g':	get_grpc_state()
+			else:   myhelp()
 			
 	#	get_allts ()
 	except SystemExit:
 		pass
+	except getopt.GetoptError:
+		myhelp()
 	except:
 		print("EXCEPT:", sys.exc_info[:2])

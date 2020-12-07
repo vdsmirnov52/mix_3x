@@ -8,8 +8,8 @@ import dbtools3 as dbt
 import sph
 
 ids_db = {
-	# 'vms':	'host=10.40.25.176 dbname=vms_ws port=5432 user=vms',
-	'vms': 'host=10.10.2.147 dbname=vms_ws port=5432 user=vms',  # DBMS-Test:
+	'vms':	'host=10.40.25.176 dbname=vms_ws port=5432 user=vms',
+	# 'vms': 'host=10.10.2.147 dbname=vms_ws port=5432 user=vms',  # DBMS-Test:
 	# 'cntr':	'host=212.193.103.20 dbname=contracts port=5432 user=smirnov',
 	'cntr': 'host=10.10.2.241 dbname=contracts port=5432 user=smirnov',  # Houm
 }
@@ -62,6 +62,7 @@ def	vms_get_ts (**kwargs):
 	order = "ORDER BY %s" % kwargs.get('order') if kwargs.get('order') else ''
 	query = qvms_ts % (where, order)
 	# print (query)
+	# return
 	IDB_VMS = dbt.dbtools(ids_db['vms'])
 	rows = IDB_VMS.get_rows(query)
 	d = IDB_VMS.desc
@@ -153,11 +154,12 @@ def	vms_calc_time (nddate, devid):
 	# query = "SELECT * FROM %s WHERE deviceid = %s LIMIT 3" % (nddate, devid)
 	query = "SELECT EXTRACT(EPOCH FROM createddatetime), lat, lon, speed, direction, deviceid, gpssatcount, gsmsignallevel  " \
 			"FROM %s WHERE deviceid = %s ORDER BY createddatetime" % (nddate, devid)
+	# print (query)
 	rows = IDB_VMS.get_rows(query)
+	# print("len rows", len(rows), IDB_VMS.last_error)
 	if not rows:	return
 	d = IDB_VMS.desc
-	# print(d)
-	days =  [0]*32
+	days = [0]*32
 	stt = {'c': 0, 'dt': 0, 'S': 0.0, 'vp': 0.0, }
 	t0 = x0 = y0 = 0.0
 	dist0 = 0
@@ -201,6 +203,7 @@ import dblite3
 IDBLite	= None
 
 def	init_dbreport ():
+	print("#"*99)
 	global IDBLite
 
 	dbl_name = r'/home/smirnov/DATAs/reports.db'
@@ -268,8 +271,9 @@ def	org_list(ssys):
 		if ja > 222:	break
 
 
-TEST = False
+TEST = True
 def	test_vms_get_ts ():
+	""" Формитрвание отчетов о работе ТС на основе данных БД vms_ws """
 	global TEST
 	TEST = True
 	inns = [#5213005154, # МП "Гагинское ПАП"
@@ -277,11 +281,20 @@ def	test_vms_get_ts ():
 			# 5243019838,	# МУП "АПАТ"
 			# 5206024886,	# МП "Вадское ПАП"
 			# 524701328820,	# ИП Копейкин ЕВ
+<<<<<<< HEAD
 		5251113834, 5201000761, 520100620580, 5231005894,
 	]
 	for inn in inns:
 		print(inn, sep='\t', end='\t')
 		res = vms_get_ts(where="inn = '%s'" % inn, order="regnum", nddata="nddata_202006", fname='dd202006_%d' % inn)
+=======
+			5251113834, 5201000761,
+			520100620580, 5231005894,
+			]
+	for inn in inns:
+		print(inn, sep='\t', end='\t')
+		res = vms_get_ts(where="inn = '%s'" % inn, order="regnum", nddata="nddata_202010", fname='dd202010_%d' % inn)
+>>>>>>> 45465fbc636aa7d390e4902e3a8f69f2b8890c70
 		print(res, res[0]//3600, res[2]/31)
 
 

@@ -39,11 +39,7 @@ def	check_t12receiver():
 
 
 from queue import Queue
-from
-
-
-
-import Thread
+from threading import Thread
 
 
 FL_BREAK = False
@@ -58,30 +54,44 @@ def	getQueue():
 			jem += 1
 			print("QDATAS.empty", jem)
 			if jem > 6:
-				print("exit")
-				os._exit(2)
+				print("exit getQueue")
+				signal.alarm(2)
+				# sys.exit()
+				# os._exit(2)
 			continue
 		jem = 0
 		data = QDATAS.get()
 		print(data, time.strftime ("%T", time.localtime(data[1])))
+	print("#" * 33, "Finish getQueue")
+
 
 import random
 def	mmm():
 	print('Генерим очередь сообщений', random.random())
 
 	j = 0
-	while j < 11:
-		t = time.time()
-		QDATAS.put([j, t])
-		j += 1
-		time.sleep(int(10*random.random()))
+	try:
+		while j < 11:
+			t = time.time()
+			QDATAS.put([j, t])
+			j += 1
+			time.sleep(int(10*random.random()))
+	except IOError:
+		print("Break mmm")
 
+import signal
+
+def	queue_alarm(signum, frame):
+	print("queue_alarm signum:", signum, frame)
+	signal.alarm(0)
+	raise IOError("queue_alarm")
 
 if __name__ == '__main__':
 	# check_t12receiver ()
-	while True:
-		pid = os.fork()
-		if pid == 0:
+	# while True:
+	# 	pid = os.fork()
+	# 	if pid == 0:
+			signal.signal(signal.SIGALRM, queue_alarm)
 			QDATAS = Queue()
 			try:
 
@@ -89,14 +99,15 @@ if __name__ == '__main__':
 				ttt.start()
 				while 1:
 					mmm()
-					break
+					print("exit mmm", QDATAS.qsize())
+					time.sleep(11)
 			except:
-				print("except", sys.exc_info()[:2])
+				print("MAIN except", sys.exc_info()[:2])
 			FL_BREAK = True
-		else:
-			try:
-				os.wait()
-			except KeyboardInterrupt:
-				print('#'*33, pid, FL_BREAK)
-				sys.exit()
-	print("Q"*44)
+		# else:
+		# 	try:
+		# 		os.wait()
+		# 	except KeyboardInterrupt:
+		# 		print('#'*33, pid, FL_BREAK)
+		# 		sys.exit()
+	# print("Q"*44)
