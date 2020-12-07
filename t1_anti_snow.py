@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """ gRPC прием данных от Т1 и отправка БД receiver (АнтиСнег)	
 
-	nohup /home/smirnov/VProjects/mix_35/mix_35/bin/python /home/smirnov/VProjects/mix_35/t1_anti_snow.py > /home/smirnov/VProjects/t1_anti_snow.log &
+	nohup /home/smirnov/VProjects/mix_35/mix_35/bin/python -u /home/smirnov/VProjects/mix_35/t1_anti_snow.py > /home/smirnov/VProjects/t1_anti_snow.log &
 """
 
 import  time, sys, os
@@ -137,6 +137,7 @@ def getDataStream (stub, numbers = None):
 from queue import Queue
 from threading import Thread
 import	dbtools3 as dbt
+import	signal
 
 DEVID_GNUM = {}		# dev_code: 
 FL_BREAK = False
@@ -169,7 +170,8 @@ def	getQueue():
 				if count_empt // 900:
 					print("#"*22, "\tcount_empt:", count_empt)
 					count_empt = 0
-					sys.exit()
+					signal.alarm(2)
+				#	sys.exit()
 				#	os._exit()
 				continue
 			count_empt = 0
@@ -268,6 +270,12 @@ def	getActiveNumbers ():
 	return	nums
 	
 
+def	queue_alarm(signum, frame):
+	print("queue_alarm signum:", signum, frame)
+	signal.alarm(0)
+	raise IOError("queue_alarm")
+	
+
 def	main (cname, activ_nums):
 #	sys.exit()
 
@@ -287,15 +295,22 @@ if __name__ == '__main__':
 	if NUMBERS:
 		print("NUMBERS:", NUMBERS)
 		QDATAS = Queue()
+		signal.signal(signal.SIGALRM, queue_alarm)
 		ttt = Thread(target = getQueue, args = ())
 		ttt.start()
 		try:
 			while 1:
-				dcode_ok = {}
-				main ('10.10.21.22:6161', NUMBERS)
-				time.sleep(30)
+				try:
+					dcode_ok = {}
+					main ('10.10.21.22:6161', NUMBERS)
+				#	time.sleep(30)
+				except	IOError:	# pass
+					print("Q"*33, "IOError: main")
 		except KeyboardInterrupt:			FL_BREAK = True
 		except SystemExit:
 			print ("#"*33, "SystemExit")
+		except:	#	IOError:
+			print("EXCEPT:", sys.exc_info()[:2])
+
 	else:
 		print("Отсутствует список NUMBERS", NUMBERS)
